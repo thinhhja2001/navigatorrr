@@ -70,6 +70,7 @@ class HomeRouteInformationParser extends RouteInformationParser<HomeRoutePath> {
 
 class HomeRouterDelegate extends RouterDelegate<HomeRoutePath>
     with ChangeNotifier, PopNavigatorRouterDelegateMixin {
+  TextEditingController textEditingController = TextEditingController();
   String? pathName;
   bool isError = false;
 
@@ -93,7 +94,6 @@ class HomeRouterDelegate extends RouterDelegate<HomeRoutePath>
 
   void onTapped(String path) {
     pathName = path;
-    print(pathName);
     notifyListeners();
   }
 
@@ -133,19 +133,26 @@ class HomeRouterDelegate extends RouterDelegate<HomeRoutePath>
     if (configuration.isUnknown) {
       pathName = null;
       isError = true;
+      notifyListeners();
+
       return;
     }
     if (configuration.isOtherPage) {
       if (configuration.pathName != null) {
         pathName = configuration.pathName;
         isError = false;
+        notifyListeners();
+
         return;
       } else {
         isError = true;
+        notifyListeners();
+
         return;
       }
     } else {
       pathName = null;
+      notifyListeners();
     }
   }
 }

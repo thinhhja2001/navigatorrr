@@ -2,25 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:navigator20/main.dart';
 
 class HomePage extends StatelessWidget {
-  final Widget? child;
-
-  const HomePage({Key? key, this.child}) : super(key: key);
+  const HomePage({
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController textEditingController = TextEditingController();
     return Scaffold(
       appBar: AppBar(),
       body: Column(
         children: [
-          const TextField(),
+          TextField(controller: textEditingController),
+          ElevatedButton(
+              onPressed: () =>
+                  HomeRouterDelegate().setNewRoutePath(HomeRoutePath.unKnown()),
+              child: const Text("go to error")),
           ElevatedButton(
               onPressed: () {
-                HomeRouterDelegate()
-                    .setNewRoutePath(HomeRoutePath.otherPage('/vietnam2k1'));
+                HomeRouterDelegate().setNewRoutePath(HomeRoutePath.home());
               },
-              child: Text("go to error")),
-          ElevatedButton(onPressed: () {}, child: Text("go to home")),
-          ElevatedButton(onPressed: () {}, child: Text("go to current"))
+              child: const Text("go to home")),
+          ElevatedButton(
+              onPressed: () {
+                HomeRouterDelegate().setNewRoutePath(
+                    HomeRoutePath.otherPage(textEditingController.text));
+              },
+              child: const Text("go to current"))
         ],
       ),
     );

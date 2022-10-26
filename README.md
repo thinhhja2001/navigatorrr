@@ -427,24 +427,30 @@ class HomeRouterDelegate extends RouterDelegate<HomeRoutePath>
   }
 
   @override
-  Future<void> setNewRoutePath(HomeRoutePath homeRoutePath) async {
-    if (homeRoutePath.isUnkown) {
+  Future<void> setNewRoutePath(HomeRoutePath configuration) async {
+    if (configuration.isUnknown) {
       pathName = null;
       isError = true;
+      notifyListeners();
+
       return;
     }
-
-    if (homeRoutePath.isOtherPage) {
-      if (homeRoutePath.pathName != null) {
-        pathName = homeRoutePath.pathName;
+    if (configuration.isOtherPage) {
+      if (configuration.pathName != null) {
+        pathName = configuration.pathName;
         isError = false;
+        notifyListeners();
+
         return;
       } else {
         isError = true;
+        notifyListeners();
+
         return;
       }
     } else {
       pathName = null;
+      notifyListeners();
     }
   }
 }
@@ -457,9 +463,9 @@ Bắt đầu với từng override method:
 - _currentConfiguration_: được gọi bởi [Router] khi nó phát hiện các thông tin route có thể thay đổi do rebuild. Vì vậy, theo các điều kiện, chúng ta đang call các _HomePageRoute_ constructors.
 - _setNewRoutePath_: Phương thức này xử lý việc định tuyến khi người dùng nhập URL vào trình duyệt và thay đổi state thông qua HomePage và nếu _pathName_ không rỗng, chúng ta có thể map tên với các trang và hiển thị các trang khác nhau theo các route khác nhau(ở đây, mình chỉ hiển thị một trang có tên route).
 
-Bước cuối cùng là thêm _routerDelegate_ và _routerInformationParser_ của chúng ta vào `MaterialApp.router()` bên trong `main.dart`
+Bây giờ thêm _routerDelegate_ và _routerInformationParser_ của chúng ta vào `MaterialApp.router()` bên trong `main.dart`
 
-````dart
+```dart
 void main() {
   runApp(App());
 }
@@ -474,4 +480,159 @@ class App extends StatelessWidget {
     );
   }
 }
-````
+```
+
+Bây giờ, chúng ta sẽ tạo UI cho demo Navigator 2.0
+
+Giả sử, chúng ta có một màn hình HomePage như thế này:
+![](https://i.ibb.co/JvZ19kv/image.png)
+
+- Nút "Go to home" sẽ đưa chúng ta về trang home "/"
+- Nút "Go to error" sẽ đưa chúng ta tới trang error
+- Nút "Go to current" sẽ đưa chúng ta tới đường dẫn chứa nội dung hiện tại của TextField
+
+Chúng ta có code của màn hình home như sau
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:navigator20/main.dart';
+
+class HomePage extends StatelessWidget {
+  const HomePage({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final TextEditingController textEditingController = TextEditingController();
+    return Scaffold(
+      appBar: AppBar(),
+      body: Column(
+        children: [
+          TextField(controller: textEditingController),
+          ElevatedButton(
+              onPressed: () =>
+                  ),
+              child: const Text("go to error")),
+          ElevatedButton(
+              onPressed: () {
+              );
+              },
+              child: const Text("go to home")),
+          ElevatedButton(
+              onPressed: () {
+               );
+              },
+              child: const Text("go to current"))
+        ],
+      ),
+    );
+  }
+}
+
+```
+
+Code UnknownPage
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/src/widgets/container.dart';
+import 'package:flutter/src/widgets/framework.dart';
+
+class UnknownPage extends StatelessWidget {
+  const UnknownPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: const Text('404'),
+    );
+  }
+}
+
+```
+
+Code PageHandle
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter/src/widgets/container.dart';
+import 'package:flutter/src/widgets/framework.dart';
+
+class PageHandle extends StatelessWidget {
+  const PageHandle({super.key, required this.pathName});
+  final String pathName;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Text('This is $pathName'),
+      ),
+    );
+  }
+}
+
+```
+
+Bây giờ, chúng ta muốn áp dụng Navigator 2.0 vào màn hình HomeScreen() như thế nào để Navigate?
+
+Chỉ cần gọi
+
+```dart
+ HomeRouterDelegate().setNewRoutePath()
+```
+
+Như vậy, việc chúng ta cần làm là gọi hàm này trong những sự kiện onPressed ở màn hình HomeScreen cho phù hợp
+
+Code HomePage hoàn chỉnh sẽ là
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:navigator20/main.dart';
+
+class HomePage extends StatelessWidget {
+  const HomePage({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final TextEditingController textEditingController = TextEditingController();
+    return Scaffold(
+      appBar: AppBar(),
+      body: Column(
+        children: [
+          TextField(controller: textEditingController),
+          ElevatedButton(
+              onPressed: () =>
+                  HomeRouterDelegate().setNewRoutePath(HomeRoutePath.unKnown()),
+              child: const Text("go to error")),
+          ElevatedButton(
+              onPressed: () {
+                HomeRouterDelegate().setNewRoutePath(HomeRoutePath.home());
+              },
+              child: const Text("go to home")),
+          ElevatedButton(
+              onPressed: () {
+                HomeRouterDelegate().setNewRoutePath(
+                    HomeRoutePath.otherPage(textEditingController.text));
+              },
+              child: const Text("go to current"))
+        ],
+      ),
+    );
+  }
+}
+
+```
+
+Như vậy là phần demo Navigator 2.0 của mình đến đây là hết
+Mọi người có thể check example của mình để biết thêm!
+
+Các nguồn tham khảo:
+
+[https://200lab.io/blog/navigation-2-0-routing-on-flutter-web/]
+
+[https://v1study.com/flutter-phat-trien-tim-hieu-he-thong-dieu-huong-va-dinh-tuyen-moi-cua-flutter.html]
